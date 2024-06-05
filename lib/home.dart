@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:secure_next_interview/modal.dart';
@@ -10,7 +12,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String? userName;
+  List<Data>? empDetails;
   @override
   void initState() {
     getUser();
@@ -19,27 +21,49 @@ class _HomeState extends State<Home> {
 
   Future getUser() async {
     final dio = Dio();
-    final res =
-        await dio.get('https://dummy.restapiexample.com/api/v1/employees');
-    List<dynamic> data = res.data['data'];
+    try {
+      final res =
+          await dio.get('https://dummy.restapiexample.com/api/v1/employees');
+      List<dynamic> data = res.data['data'];
+      setState(() {
+        empDetails = data.map((empData) => Data.fromJson(empData)).toList();
+      });
+    } on DioException catch (e) {
+      print(e.hashCode);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'User Details',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            // Text() .\
-          ],
+    return SafeArea(
+      child: Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Center(
+                child: Text(
+                  'User Names',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Expanded(
+                  child: empDetails != null
+                      ? ListView.builder(
+                          itemCount: empDetails!.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child:
+                                  Text(empDetails![index].employeeName ?? ''),
+                            );
+                          })
+                      : const Center(child: CircularProgressIndicator()))
+            ],
+          ),
         ),
       ),
     );
